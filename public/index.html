@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wi-Fi Cortesía - Acceso a Internet</title>
+  <link rel="icon" href="logo.png" />
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      color: #f8fafc;
+    }
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 2.5rem 2rem;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    img.logo {
+      width: 88px;
+      height: 88px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      border-radius: 50%;
+      background: #ffffff;
+      padding: 6px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+    p.subtitle {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+    .input-group {
+      margin-bottom: 1.1rem;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 0.98rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(15, 23, 42, 0.6);
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+    input::placeholder {
+      color: #94a3b8;
+    }
+    input:focus {
+      border-color: #38bdf8;
+      background: rgba(15, 23, 42, 0.85);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+    }
+    input[type="text"] {
+      text-transform: capitalize;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 0.5rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+    button:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.6);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    button:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    #successScreen {
+      display: none;
+    }
+    #successScreen h3 {
+      color: #4ade80;
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    #statusMsg {
+      margin-top: 1rem;
+      color: #f87171;
+      font-size: 0.875rem;
+      font-weight: 500;
+      min-height: 20px;
+    }
+    footer {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      text-align: center;
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container" id="formContainer">
+      <img class="logo" src="logo.png" alt="Logo" onerror="this.style.display='none'" />
+      <h2>Wi-Fi de Cortesía</h2>
+      <p class="subtitle">Disfruta de internet registrando tus datos a continuación.</p>
+      
+      <form id="wifiForm">
+        <div class="input-group">
+          <input type="text" id="name" placeholder="Nombre completo" required autocomplete="name" />
+        </div>
+        <div class="input-group">
+          <input type="email" id="email" placeholder="Correo electrónico" required autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <input type="text" id="phone" inputmode="numeric" pattern="[0-9]*" placeholder="Teléfono (opcional)" autocomplete="tel" />
+        </div>
+        <button type="submit" id="submitBtn">Conectarse a Internet</button>
+      </form>
+      <p id="statusMsg"></p>
+    </div>
+
+    <div class="container" id="successScreen">
+      <img class="logo" src="logo.png" alt="Logo" onerror="this.style.display='none'" />
+      <h3>Conexión Exitosa</h3>
+      <p class="subtitle">Ya estás conectado a nuestra red. Gracias por visitarnos.</p>
+    </div>
+  </div>
+
+  <footer>
+    Todos los derechos reservados.
+  </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const mikrotikLoginUrl = urlParams.get('link-login'); 
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_70ZAPklAhCmp50L_J4PtjNW0zvYUAfE",
+      authDomain: "wifi-captive-portal-77.firebaseapp.com",
+      projectId: "wifi-captive-portal-77",
+      storageBucket: "wifi-captive-portal-77.appspot.com",
+      messagingSenderId: "190415808729",
+      appId: "1:190415808729:web:2c8ab51f245a08c044b6c8"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const localID = "sba-001";
+
+    const form = document.getElementById('wifiForm');
+    const statusMsg = document.getElementById('statusMsg');
+    const formContainer = document.getElementById('formContainer');
+    const successScreen = document.getElementById('successScreen');
+    const submitBtn = document.getElementById('submitBtn');
+    const phoneInput = document.getElementById('phone');
+
+    phoneInput.addEventListener('input', () => {
+      phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, '');
+    });
+
+    function isInvalidEmail(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+      if (!regex.test(email)) return true;
+
+      const domain = email.split('@')[1];
+      const tempDomains = ['tempmail', '10minutemail', 'guerrillamail', 'mailinator', 'yopmail'];
+      if (tempDomains.some(temp => domain.includes(temp))) return true;
+
+      const isGmail = domain.startsWith('gmai') || domain.startsWith('gmil') || domain.startsWith('gmal') || domain.includes('gmail');
+      if (isGmail && domain !== 'gmail.com') return true;
+
+      const isHotmail = domain.startsWith('hotm') || domain.startsWith('htmail') || domain.includes('hotmail');
+      if (isHotmail && domain !== 'hotmail.com') return true;
+
+      const isYahoo = domain.startsWith('yaho') || domain.startsWith('yhoo') || domain.includes('yahoo');
+      if (isYahoo && domain !== 'yahoo.com') return true;
+
+      const isOutlook = domain.startsWith('outl') || domain.startsWith('utlook') || domain.includes('outlook');
+      if (isOutlook && domain !== 'outlook.com') return true;
+
+      return false;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.textContent = "";
+
+      let name = document.getElementById('name').value.trim();
+      let email = document.getElementById('email').value.trim().toLowerCase();
+      const phone = phoneInput.value.trim();
+
+      if (!name || !email) {
+        statusMsg.textContent = "Por favor completa los campos obligatorios.";
+        return;
+      }
+
+      if (isInvalidEmail(email)) {
+        statusMsg.textContent = "Ingresa un correo electrónico válido.";
+        return;
+      }
+
+      const now = new Date();
+      const timeString = now.toLocaleString('sv-SE', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Conectando...";
+
+      try {
+        await db.collection("wifi_submissions").add({
+          name,
+          email,
+          phone: phone || "N/A",
+          localID,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          timeString
+        });
+
+        formContainer.style.display = "none";
+        successScreen.style.display = "block";
+
+        setTimeout(() => {
+          if (mikrotikLoginUrl) {
+            window.location.href = mikrotikLoginUrl;
+          } else {
+            window.close();
+          }
+        }, 3000);
+
+      } catch (err) {
+        console.error("Firestore error:", err);
+        statusMsg.textContent = "Error al conectar. Intenta nuevamente.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Conectarse a Internet";
+      }
+    });
+  </script>
+</body>
+</html>
